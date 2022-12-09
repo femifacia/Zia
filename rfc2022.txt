@@ -1,0 +1,612 @@
+
+
+
+
+
+EPITECH Bénin                                F. Attindehou
+Request for Comments: 2022                   F. Facia
+Category: Standard Track                     S. Gounoukperou
+                                             G. Houmbadji
+                                             D. Tobossi
+                                             Janvier 2022
+
+                      Zia protocol
+
+Status of this Memo
+
+  This document provides information about the Zia protocol.
+  Distribution of this memo is unlimited.
+
+Copyright Notice
+
+  Copyright (C) Zia hero team (2022). All Rights Reserved.
+
+Table of Contents
+
+  1. Introduction........................................................2
+  2. Zia overall architecture............................................3
+  3. Modules.............................................................4
+  3a. Http...............................................................5
+  3b. SSL................................................................6
+  3c. Other modules..................................................... 7
+  4. Services............................................................8
+  5. Author's Addresses..................................................9
+  6. Full Copyright Statement............................................10
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Attindehou, et al.              Standard Track                 [Page 2]
+
+RFC 2022                        Zia protocol               Janvier 2022
+
+1. Introduction
+   The purpose of Zia project is to create a http server like Apache
+   server in C++.
+   The server uses a configuration file (.ini in our case) to be 
+   configured.
+   Two main modules are implemented: secure connection module SSL
+   and a Php Handler module (PhpCgi). 
+   Along this, we've implemented other modules like Http for 
+   connection, Html for html rendering and FileServe for file
+   handling.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Facia                     Standard Track                       [Page 3]
+
+RFC 2022                  Zia protocol                  Janvier 2022
+
+2. Zia overall architecture
+  The Zia uses the mediator architecture. The "Core" class is the
+  mediator. Aside the "Core", there is the "Shell" and the "Server".
+  At the beginning (when we launch the server), this former looks at
+  the configuration file (zia.ini) in the specific path. If it doesn't
+  find it or if it finds it but the content is not convenient, it uses
+  the default configuration. Otherwise, it'll use the content in
+  the file to be configured.
+  This part is handled by a "ConfigHandler" class in the Core.
+  When configured, the core launch two threads: a thread for the
+  "Server" and another one for the "Shell".
+  The "Server" is responsible of handling connection and http actions
+  with user.
+  On the "Server", we can lauch many services on given ports.
+  The "Shell" works like any shell. It takes commands and with respect
+  of theses, it does a specific action on the server (load module, 
+  unload module, stop server, ...).
+
+  This is a simple representation of how the server works.
+
+    ---------------         ------------          ------------------
+    |   SERVER    |         |   CORE   |          |      SHELL     |
+    |             |         |          | -------> |                |
+    |   client1   | <------ | Mediator | <------- |  takeCommand   |
+    |   client2   |         |          |          | executeCommand |
+    |   ....      |         |          |          |                |
+    ---------------         ------------          ------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Attindehou, et al.            Standard Track                   [Page 4]
+
+RFC 2022                      Zia protocol                 Janvier 2022
+
+3. Modules
+  All module classes inherited from an IModule class. In order to
+  handle well the connections, each module has its type. All
+  connection modules like Http and Ssl have type 1, text rendering
+  modules have type 2 and logger module has type 3.
+  When a new client is detected, it is the connection modules that
+  handle it. Depeding on its needs (html rendering, php rendering, 
+  ...) a module of type 2 or 3 is called. The response is then
+  generated and sent to the client.
+  The http methods are handled in each module. As our project is
+  about HTTP 1.1 version, we focus on GET, HEAD, OPTIONS, POST,
+  PUT, DELETE, CONNECT and TRACE. Http codes are for information
+  1xx (100 & 101), successful requests 2xx (200-206), redirections
+  3xx (300-307), client errors 4xx (400-417) and server errors 
+  5xx (500-505).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Facia                     Standard Track                       [Page 5]
+
+RFC 2022                 Zia protocol                      Janvier 2022
+
+3a. Http
+   It's the main module in the architecture. It handles tcp connections
+   and various http requests.
+   When a service is launched, a tcp connection is immediately created
+   in a thread. All interactions between Shell and Services are handled
+   by http requests.
+   It can be associated to SSL for security.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Facia & Houmbadji         Standard Track                       [Page 6]
+
+RFC 2022                 Zia protocol                      Janvier 2022
+
+3b. SSL
+   SSL is in charge of security in connections. It then uses https
+   protocol.
+   SSL uses a key system (certificate keys and private keys) to secure
+   connections between server and client.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Attindehou & Tobossi         Standard Track                    [Page 7]
+
+RFC 2022                 Zia protocol                      Janvier 2022
+
+3c. Other modules
+   Other modules has been implemented too. There are HTML, PhpCgi, 
+   FileServe and Logger.
+   The "HTML" module handled all about html files. When the server 
+   needs to deal with a particular html file or html content, it's the 
+   module that is called.
+
+   Like "HTML" module that handled html files, "PhpCgi" module handles
+   php file. It's the module that is called when the server needs to
+   deal with php files. The particularity about this module is that, 
+   as the web doesn't know the format of php files, these are firstly
+   converted in html format that is rendered.
+
+   The "FileServe" module is like a tree command on linux. Thankful to
+   this module, we can see all files and directories on the server and
+   easily access them by clicking.
+
+   The "Logger" module is mainly used for information keeping. All 
+   http requests operated on clients are directly saved in  a 
+   logs.txt file handled by the Logger module.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Facia & Houmbadji         Standard Track                       [Page 8]
+
+RFC 2022                 Zia protocol                      Janvier 2022
+
+3a. Services
+   A service is mainly caracterized by its name, its root, the module
+   networks it uses, its logs file and its port.
+   The module network tells if the service should be run on default
+   http or on http with secure connection (http + SSL).
+   The Logger keeps information about http requests on a specific 
+   Service. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Attindehou, et al.         Standard Track                      [Page 9]
+
+RFC 2022                   Zia protocol                    Janvier 2022
+
+5. Author's adresses
+   
+   Femi Facia
+   Cotonou, Bénin
+
+   Email: femi.facia@epitech.eu
+
+   Francesca Attindehou
+   Cotonou, Bénin
+
+   Email: francesca.attindehou@epitech.eu
+
+   Sergino Gounoukperou
+   Cotonou, Bénin
+
+   Email: sergino.gounoukperou@epitech.eu
+
+   Georges Houmbadji
+   Abomey-Calavi, Bénin
+
+   Email: georges.houmbadji@epitech.eu
+
+   Damia Tobossi
+   Cotonou, Bénin
+
+   Email: damia.tobossi@epitech.eu
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Attindehou, et al.               Standard Track               [Page 10]
+
+RFC 2022                         Zia protocol              Janvier 2022
+
+5. Full copyright
+  Copyright (C) The Internet Society (1997). All Rights Reserved.
+
+  This document and translations of it may be copied and furnished to
+  others, and derivative works that comment on or otherwise explain it
+  or assist in its implmentation may be prepared, copied, published and
+  distributed, in whole or in part, without restriction of any kind,
+  provided that the above copyright notice and this paragraph are
+  included on all such copies and derivative works.  However, this
+  document itself may not be modified in any way, such as by removing
+  the copyright notice or references to the Internet Society or other
+  Internet organizations, except as needed for the purpose of
+  developing Internet standards in which case the procedures for
+  copyrights defined in the Internet Standards process must be
+  followed, or as required to translate it into languages other than
+  English.
+
+  The limited permissions granted above are perpetual and will not be
+  revoked by the Internet Society or its successors or assigns.
+
+  This document and the information contained herein is provided on an
+  "AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING
+  TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+  BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
+  HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
+  MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Attindehou, et al.              Standard Track                [Page 11]
